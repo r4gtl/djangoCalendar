@@ -1,5 +1,5 @@
 from django.forms import ModelForm, DateInput
-from cal.models import Event
+from cal.models import Event, tblOrdini
 
 class EventForm(ModelForm):
   class Meta:
@@ -16,3 +16,20 @@ class EventForm(ModelForm):
     # input_formats parses HTML5 datetime-local input to datetime field
     self.fields['start_time'].input_formats = ('%Y-%m-%dT%H:%M',)
     self.fields['end_time'].input_formats = ('%Y-%m-%dT%H:%M',)
+    
+
+class OrderForm(ModelForm):
+  class Meta:
+    model = tblOrdini
+    # datetime-local is a HTML5 input type, format to make date time show on fields
+    widgets = {
+      'datacons': DateInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
+      'datacomunicata': DateInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
+    }
+    fields = '__all__'
+
+  def __init__(self, *args, **kwargs):
+    super(OrderForm, self).__init__(*args, **kwargs)
+    # input_formats parses HTML5 datetime-local input to datetime field
+    self.fields['datacons'].input_formats = ('%Y-%m-%dT%H:%M',)
+    self.fields['datacomunicata'].input_formats = ('%Y-%m-%dT%H:%M',)

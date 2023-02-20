@@ -4,11 +4,12 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.views import generic
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from django.views.generic.list import MultipleObjectMixin
 import calendar
 
 from .models import *
 from .utils import Calendar
-from .forms import EventForm
+from .forms import EventForm, OrderForm
 
 def index(request):
     return HttpResponse('hello')
@@ -20,12 +21,31 @@ class CalendarView(generic.ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         d = get_date(self.request.GET.get('month', None))
+        print("d dall class based: " + str(d))
         cal = Calendar(d.year, d.month)
         html_cal = cal.formatmonth(withyear=True)
         context['calendar'] = mark_safe(html_cal)
         context['prev_month'] = prev_month(d)
         context['next_month'] = next_month(d)
         return context
+
+
+
+def calendarView(request) :
+
+    # The dictionary for data initialization with field names as the keys
+    context ={}
+    d = get_date(request.GET.get('month', None))
+    print("D: " + str(d))
+    cal = Calendar(d.year, d.month)
+    html_cal = cal.formatmonth(withyear=True)
+    # It has to be added to the dictionary during field initialization
+    context["eventi"] = Event.objects.all()  
+    context["ordini"] = tblOrdini.objects.all()
+    context['calendar'] = mark_safe(html_cal)
+    context['prev_month'] = prev_month(d)
+    context['next_month'] = next_month(d)
+    return render(request, "cal/calendar.html", context)
 
 def get_date(req_month):
     if req_month:
@@ -58,3 +78,16 @@ def event(request, event_id=None):
         form.save()
         return HttpResponseRedirect(reverse('cal:calendar'))
     return render(request, 'cal/event.html', {'form': form})
+
+def order(request, order_id=None):
+    instance = tblOrdini()
+    if order_id:
+        instance = get_object_or_404(tblOrdini, pk=order_id)
+    else:
+        instance = tblOrdini()
+
+    form = OrderForm(request.POST or None, instance=instance)
+    if request.POST and form.is_valid():
+        form.save()
+        return HttpResponseRedirect(reverse('cal:calendar'))
+    return render(request, 'cal/order.html', {'form': form})

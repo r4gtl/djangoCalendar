@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
 from calendar import HTMLCalendar
-from .models import Event
+from .models import Event, tblOrdini
+from django.urls import reverse
 
-class Calendar(HTMLCalendar):
+#class Calendar(HTMLCalendar):
+class originalCalendar(HTMLCalendar):
 	def __init__(self, year=None, month=None):
 		self.year = year
 		self.month = month
@@ -10,13 +12,15 @@ class Calendar(HTMLCalendar):
 
 	# formats a day as a td
 	# filter events by day
+	#def formatday(self, day, events, orders):
 	def formatday(self, day, events):
 		events_per_day = events.filter(start_time__day=day)
+		
 		d = ''
 		for event in events_per_day:
 			d += f'<li> {event.get_html_url} </li>'
-			#d += f'<li> Provaaggiuntacampo </li>'
-
+		
+		
 		if day != 0:
 			return f"<td><span class='date'>{day}</span><ul> {d} </ul></td>"
 		return '<td></td>'
@@ -26,16 +30,176 @@ class Calendar(HTMLCalendar):
 		week = ''
 		for d, weekday in theweek:
 			week += self.formatday(d, events)
+			
 		return f'<tr> {week} </tr>'
 
 	# formats a month as a table
 	# filter events by year and month
 	def formatmonth(self, withyear=True):
 		events = Event.objects.filter(start_time__year=self.year, start_time__month=self.month)
-
+		#orders = tblOrdini.objects.filter(datacons__year=self.year, datacons__month=self.month)
 		cal = f'<table border="0" cellpadding="0" cellspacing="0" class="calendar">\n'
 		cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
 		cal += f'{self.formatweekheader()}\n'
 		for week in self.monthdays2calendar(self.year, self.month):
 			cal += f'{self.formatweek(week, events)}\n'
+			
 		return cal
+
+
+################Nuovo
+
+
+class Calendar(HTMLCalendar):
+	def __init__(self, year=None, month=None):
+		self.year = year
+		self.month = month
+		super(Calendar, self).__init__()
+
+	# formats a day as a td
+	# filter events by day
+	#def formatday(self, day, events, orders):
+	# def formatday(self, day, events):
+	# 	print("Eventi: " + str(events))
+	# 	events_per_day = events.filter(start_time__day=day)
+		
+	# 	d = ''
+	# 	for event in events_per_day:
+	# 		d += f'<li> {event.get_html_url} </li>'
+		
+		
+	# 	if day != 0:
+	# 		return f"<td><span class='date'>{day}</span><ul> {d} </ul></td>"
+	# 	return '<td></td>'
+ 
+	def formatday(self, day, bastardi, campo):
+		print("Eventi: " + str(bastardi))
+		print("Campo: " + str(campo))
+		prova=campo+'__day'
+		events_per_day = bastardi.filter(**{prova: day})
+		
+		d = ''
+		for event in events_per_day:
+			if event.origin == "order":
+				order_id=event.external_id
+				url = reverse('cal:order_edit', args=(order_id,))
+				ordine=tblOrdini.objects.get(idordine=order_id)
+				d += f'<li class="order"><a style="color:black;" href="{url}"> { ordine.datacons } </a> </li>'
+			else:
+				d += f'<li> {event.get_html_url} </li>'
+		
+		
+		if day != 0:
+			return f"<td><span class='date'>{day}</span><ul> {d} </ul></td>"
+		return '<td></td>'
+
+	def formatdayorders(self, day, orders):
+		print("Ordini: " + str(orders))
+		orders_per_day = orders.filter(datacons__day=day)
+		
+		d = ''
+		for order in orders_per_day:
+			d += f'<li> {order.get_html_url} </li>'
+		
+		
+		if day != 0:
+			return f"<td><span class='date'>{day}</span><ul> {d} </ul></td>"
+		return '<td></td>'
+ 
+ 
+ 
+	# formats a week as a tr
+	def formatweek(self, theweek, bastardi, campo):
+		week = ''
+		for d, weekday in theweek:
+			week += self.formatday(d, bastardi, str(campo))
+			
+		return f'<tr> {week} </tr>'
+
+	def formatweekorders(self, theweek, orders):
+		week = ''
+		for d, weekday in theweek:
+			week += self.formatdayorders(d, orders)
+			
+			
+		return f'<tr> {week} </tr>'
+
+	# formats a month as a table
+	# filter events by year and month
+	def formatmonth(self, withyear=True):
+		events = Event.objects.filter(start_time__year=self.year, start_time__month=self.month)
+		orders = tblOrdini.objects.filter(datacons__year=self.year, datacons__month=self.month)
+		
+	
+		cal = f'<table border="0" cellpadding="0" cellspacing="0" class="calendar">\n'
+		cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
+		cal += f'{self.formatweekheader()}\n'
+		for week in self.monthdays2calendar(self.year, self.month):
+			cal += f'{self.formatweek(week, events, "start_time")}\n' 
+   			
+			
+		return cal
+
+	def formatmonthOrders(self, withyear=True):
+		orders = tblOrdini.objects.filter(datacons__year=self.year, datacons__month=self.month)
+		#orders = tblOrdini.objects.filter(datacons__year=self.year, datacons__month=self.month)
+		cal = f'<table border="0" cellpadding="0" cellspacing="0" class="calendar">\n'
+		cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
+		cal += f'{self.formatweekheader()}\n'
+		for week in self.monthdays2calendar(self.year, self.month):
+			cal += f'{self.formatweekorders(week, orders)}\n'
+			
+		return cal
+
+
+##################### Modificabile
+class cancellaCalendar(HTMLCalendar):
+#class provaCalendar(HTMLCalendar):
+	def __init__(self, year=None, month=None):
+		self.year = year
+		self.month = month
+		super(Calendar, self).__init__()
+
+	# formats a day as a td
+	# filter events by day
+	#def formatday(self, day, events, orders):
+	def formatday(self, day, events,orders):
+		print("Orders formatday: " + str(orders))
+		print("Events formatday: " + str(events))
+		events_per_day = events.filter(start_time__day=day)
+		orders_per_day = orders.filter(datacons=day)
+		d = ''
+		for event in events_per_day:
+			d += f'<li> {event.get_html_url} </li>'
+		
+		for order in orders_per_day:
+			d += f'<li> {order.get_html_url} </li>'
+
+		if day != 0:
+			return f"<td><span class='date'>{day}</span><ul> {d} </ul></td>"
+		return '<td></td>'
+
+	# formats a week as a tr
+	def formatweek(self, theweek, events, orders):
+		print("Orders formatweek: " + str(orders))
+		print("Events formatweek: " + str(events))
+		week = ''
+		for d, weekday in theweek:
+			week += self.formatday(d, events, orders)
+			#week += self.formatday(d, orders)
+		return f'<tr> {week} </tr>'
+
+	# formats a month as a table
+	# filter events by year and month
+	def formatmonth(self, withyear=True):
+		#print("Orders formatmonth: " + str(orders))
+		events = Event.objects.filter(start_time__year=self.year, start_time__month=self.month)
+		orders = tblOrdini.objects.filter(datacons__year=self.year, datacons__month=self.month)
+		cal = f'<table border="0" cellpadding="0" cellspacing="0" class="calendar">\n'
+		cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
+		cal += f'{self.formatweekheader()}\n'
+		for week in self.monthdays2calendar(self.year, self.month):
+			cal += f'{self.formatweek(week, events, orders)}\n'
+			#cal += f'{self.formatweek(week, orders)}\n'
+		return cal
+###################Prove precedenti
