@@ -1,3 +1,4 @@
+from django.views.generic import View
 from datetime import datetime, timedelta, date
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
@@ -29,7 +30,23 @@ class CalendarView(generic.ListView):
         context['next_month'] = next_month(d)
         return context
 
+class DashboardView(View):
+    #login_url = "accounts:signin"
+    template_name = "cal/dashboard.html"
 
+    def get(self, request, *args, **kwargs):
+        # events = Event.objects.get_all_events(user=request.user)
+        # running_events = Event.objects.get_running_events(user=request.user)
+        # latest_events = Event.objects.filter(user=request.user).order_by("-id")[:10]
+        events = Event.objects.get_all_events()
+        running_events = Event.objects.get_running_events()
+        latest_events = Event.objects.filter().order_by("-id")[:10]
+        context = {
+            "total_event": events.count(),
+            "running_events": running_events,
+            "latest_events": latest_events,
+        }
+        return render(request, self.template_name, context)
 
 def calendarView(request) :
 
@@ -46,6 +63,23 @@ def calendarView(request) :
     context['prev_month'] = prev_month(d)
     context['next_month'] = next_month(d)
     return render(request, "cal/calendar.html", context)
+
+def calendarWeekView(request) :
+
+    # The dictionary for data initialization with field names as the keys
+    context ={}
+    d = get_date(request.GET.get('month', None))
+    print("D: " + str(d))
+    cal = Calendar(d.year, d.month)
+    html_cal = cal.formatweek(week, events)
+    # It has to be added to the dictionary during field initialization
+    context["eventi"] = Event.objects.all()  
+    context["ordini"] = tblOrdini.objects.all()
+    context['calendar'] = mark_safe(html_cal)
+    context['prev_month'] = prev_month(d)
+    context['next_month'] = next_month(d)
+    return render(request, "cal/calendar.html", context)
+
 
 def get_date(req_month):
     if req_month:

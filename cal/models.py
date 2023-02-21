@@ -1,5 +1,30 @@
 from django.db import models
 from django.urls import reverse
+from datetime import datetime
+
+
+class EventManager(models.Manager):
+    """ Event manager """
+
+    #def get_all_events(self, user):
+    def get_all_events(self):
+        #events = Event.objects.filter(user=user, is_active=True, is_deleted=False)
+        events = Event.objects.all()
+        return events
+
+    # def get_running_events(self, user):
+    def get_running_events(self):
+        # running_events = Event.objects.filter(
+        #     user=user,
+        #     is_active=True,
+        #     is_deleted=False,
+        #     end_time__gte=datetime.now().date(),
+        # ).order_by("start_time")
+        running_events = Event.objects.filter(            
+            end_time__gte=datetime.now().date(),
+        ).order_by("start_time")
+        return running_events
+    
 
 class Event(models.Model):
     title = models.CharField(max_length=200)
@@ -9,11 +34,16 @@ class Event(models.Model):
     origin = models.CharField(max_length=50, blank=True, null=True)
     external_id = models.IntegerField(null=True, blank=True)
 
+    objects = EventManager()
+    
     @property
     def get_html_url(self):
         url = reverse('cal:event_edit', args=(self.id,))
         return f'<a href="{url}"> {self.title} </a>'
-    
+
+
+
+
 class tblOrdini(models.Model):
     idordine = models.AutoField(primary_key=True)
     origineordine=models.IntegerField(null=True, blank=True)
@@ -42,7 +72,7 @@ class tblClienti(models.Model):
 
     def __str__(self):
         return self.cliente
-    
+
 class tbldettordini(models.Model):
     iddettordine=models.AutoField(primary_key=True)
     idordine=models.ForeignKey('tblOrdini', on_delete=models.CASCADE)
@@ -57,11 +87,10 @@ class Gruppi(models.Model)    :
 
     def __str__(self):
         return self.descrizionegruppo
-    
+
 class Colori(models.Model):
     idcolore=models.AutoField(primary_key=True)
     descrizionecolori=models.CharField(max_length=50, null=False, blank=False)
-    
+
     def __str__(self):
         return self.descrizionecolori
-    
