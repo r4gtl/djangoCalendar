@@ -33,17 +33,7 @@ class originalCalendar(HTMLCalendar):
 			
 		return f'<tr> {week} </tr>'
 
-	def formatweekOnly(self, withyear=True):
-		events = Event.objects.filter(start_time__year=self.year, start_time__month=self.month)
-		#orders = tblOrdini.objects.filter(datacons__year=self.year, datacons__month=self.month)
-		cal = f'<table border="0" cellpadding="0" cellspacing="0" class="calendar">\n'
-		cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
-		cal += f'{self.formatweekheader()}\n'
-		for week in self.monthdays2calendar(self.year, self.month):
-			cal += f'{self.formatweek(week, events)}\n'
-			
-		return cal
-
+	
 	
  
  
@@ -116,6 +106,16 @@ class Calendar(HTMLCalendar):
 			
 		return f'<tr> {week} </tr>'
 
+	def formatweekOnly(self, withyear=True):
+		events = Event.objects.filter(start_time__year=self.year, start_time__month=self.month)
+		#orders = tblOrdini.objects.filter(datacons__year=self.year, datacons__month=self.month)
+		cal = f'<table border="0" cellpadding="0" cellspacing="0" class="calendar">\n'
+		cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
+		cal += f'{self.formatweekheader()}\n'
+		for week in self.monthdays2calendar(self.year, self.month):
+			cal += f'{self.formatweek(week, events)}\n'
+			
+		return cal
 
 
 
@@ -130,10 +130,34 @@ class Calendar(HTMLCalendar):
 		cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
 		cal += f'{self.formatweekheader()}\n'
 		for week in self.monthdays2calendar(self.year, self.month):
+			print("Settimana: " + str(week))
 			cal += f'{self.formatweek(week, events)}\n' 
    			
 			
 		return cal
+	
+	def formatmonthWeek(self, exact_week, withyear=True):
+		#Appunto per me. Devo capire qual è il numero della settimana nella
+		#tupla che esce dalla funzione week.
+		events = Event.objects.filter(start_time__year=self.year, start_time__month=self.month)
+		orders = tblOrdini.objects.filter(datacons__year=self.year, datacons__month=self.month)
+		
+	
+		cal = f'<table border="0" cellpadding="0" cellspacing="0" class="calendar">\n'
+		cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
+		cal += f'{self.formatweekheader()}\n'
+		for week in self.monthdays2calendar(self.year, self.month):
+			print("Inizio Week:" + str(week))
+			print("Inizio Exact_Week:" + str(exact_week))
+			if week == exact_week:
+				print("Week:" + str(week))
+				print("Exact_Week:" + str(exact_week))
+				print("Trovato")
+				cal += f'{self.formatweek(week, events)}\n' 
+   			
+			
+		return cal
+
 
 
 

@@ -71,7 +71,9 @@ def calendarWeekView(request) :
     d = get_date(request.GET.get('month', None))
     print("D: " + str(d))
     cal = Calendar(d.year, d.month)
-    html_cal = cal.formatweek(week, events)
+    dateToday = date.today()
+    week=dateToday.isocalendar().week
+    html_cal = cal.formatmonthWeek(week, withyear=True)
     # It has to be added to the dictionary during field initialization
     context["eventi"] = Event.objects.all()  
     context["ordini"] = tblOrdini.objects.all()
