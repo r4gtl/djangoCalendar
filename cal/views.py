@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.views.generic.list import MultipleObjectMixin
 import calendar
+import numpy as np
 
 from .models import *
 from .utils import Calendar
@@ -71,8 +72,10 @@ def calendarWeekView(request) :
     d = get_date(request.GET.get('month', None))
     print("D: " + str(d))
     cal = Calendar(d.year, d.month)
-    dateToday = date.today()
-    week=dateToday.isocalendar().week
+    
+    dateToday = datetime.now()
+    week=get_week_of_month(d.year, d.month, d.day)
+    print("Settimana ottenuta: " + str(week))
     html_cal = cal.formatmonthWeek(week, withyear=True)
     # It has to be added to the dictionary during field initialization
     context["eventi"] = Event.objects.all()  
@@ -82,6 +85,10 @@ def calendarWeekView(request) :
     context['next_month'] = next_month(d)
     return render(request, "cal/calendar.html", context)
 
+def get_week_of_month(year, month, day):
+		x = np.array(calendar.monthcalendar(year, month))
+		week_of_month = np.where(x==day)[0][0] + 1
+		return(week_of_month)
 
 def get_date(req_month):
     if req_month:

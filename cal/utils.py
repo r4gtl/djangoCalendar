@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 from calendar import HTMLCalendar
 from .models import Event, tblOrdini
 from django.urls import reverse
+import numpy as np
+
 
 #class Calendar(HTMLCalendar):
 class originalCalendar(HTMLCalendar):
@@ -59,8 +61,12 @@ class Calendar(HTMLCalendar):
 	def __init__(self, year=None, month=None):
 		self.year = year
 		self.month = month
+		
 		super(Calendar, self).__init__()
-
+		print("Anno: " + str(self.year))
+		print("Mese: " + str(self.month))
+		
+  
 	# formats a day as a td
 	# filter events by day
 	#def formatday(self, day, events, orders):
@@ -101,23 +107,30 @@ class Calendar(HTMLCalendar):
 	# formats a week as a tr
 	def formatweek(self, theweek, events):
 		week = ''
+		print("Theweek: " + str(theweek))
 		for d, weekday in theweek:
 			week += self.formatday(d,events)
 			
 		return f'<tr> {week} </tr>'
 
-	def formatweekOnly(self, withyear=True):
-		events = Event.objects.filter(start_time__year=self.year, start_time__month=self.month)
-		#orders = tblOrdini.objects.filter(datacons__year=self.year, datacons__month=self.month)
-		cal = f'<table border="0" cellpadding="0" cellspacing="0" class="calendar">\n'
-		cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
-		cal += f'{self.formatweekheader()}\n'
-		for week in self.monthdays2calendar(self.year, self.month):
-			cal += f'{self.formatweek(week, events)}\n'
+	# def formatweekOnly(self, theweek, events):
+	# 	events = Event.objects.filter(start_time__year=self.year, start_time__month=self.month)
+	# 	#orders = tblOrdini.objects.filter(datacons__year=self.year, datacons__month=self.month)
+	# 	cal = f'<table border="0" cellpadding="0" cellspacing="0" class="calendar">\n'
+	# 	cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
+	# 	cal += f'{self.formatweekheader()}\n'
+	# 	#for week in self.monthdays2calendar(self.year, self.month):
+	# 	cal += f'{self.formatweek(week, events)}\n'
 			
-		return cal
+	# 	return cal
 
-
+	def formatweekOnly(self, theweek, weekNum, events):
+		week = ''
+		theweek=theweek[:int(weekNum)]
+		print("Theweek: " + str(theweek))
+		for d, weekday in theweek:
+			week += self.formatday(d,events)
+		return f'<tr> {week} </tr>'
 
 	# formats a month as a table
 	# filter events by year and month
@@ -130,35 +143,38 @@ class Calendar(HTMLCalendar):
 		cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
 		cal += f'{self.formatweekheader()}\n'
 		for week in self.monthdays2calendar(self.year, self.month):
-			print("Settimana: " + str(week))
+			print("Settimana da formatmonth: " + str(week))
 			cal += f'{self.formatweek(week, events)}\n' 
    			
 			
 		return cal
 	
-	def formatmonthWeek(self, exact_week, withyear=True):
+	def formatmonthWeek(self, week, withyear=True):
 		#Appunto per me. Devo capire qual è il numero della settimana nella
 		#tupla che esce dalla funzione week.
 		events = Event.objects.filter(start_time__year=self.year, start_time__month=self.month)
-		orders = tblOrdini.objects.filter(datacons__year=self.year, datacons__month=self.month)
-		
 	
 		cal = f'<table border="0" cellpadding="0" cellspacing="0" class="calendar">\n'
 		cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
 		cal += f'{self.formatweekheader()}\n'
-		for week in self.monthdays2calendar(self.year, self.month):
-			print("Inizio Week:" + str(week))
-			print("Inizio Exact_Week:" + str(exact_week))
-			if week == exact_week:
-				print("Week:" + str(week))
-				print("Exact_Week:" + str(exact_week))
-				print("Trovato")
-				cal += f'{self.formatweek(week, events)}\n' 
+		for theweek in self.monthdays2calendar(self.year, self.month):
+			cal += f'{self.formatweekOnly(theweek, week, events)}\n' 		
+  		# count=0
+  		
+		# for week in self.monthdays2calendar(self.year, self.month):
+		# 	count+=1
+		# 	print("Inizio Week:" + str(week))
+		# 	print("Inizio Exact_Week:" + str(exact_week))
+		# 	if count == exact_week:
+		# 		print("Week:" + str(week))
+		# 		print("Exact_Week:" + str(exact_week))
+		# 		print("Trovato")
+		# 		cal += f'{self.formatweek(week, events)}\n' 
    			
 			
 		return cal
 
-
+	
 
 
 ##################### Modificabile
